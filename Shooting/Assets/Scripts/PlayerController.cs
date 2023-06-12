@@ -5,66 +5,78 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    private bool isDead;
     private bool isGrounded;
     private float shootTimer;
     private float spriteTimer;
+    private int jumpCount;
 
-    private Rigidbody2D rigidbody; 
+    private Rigidbody2D rigid; 
     private Animator animator;
-    private AudioSource audioSource;
+    private AudioSource jumpAudio; //Player의 AudioSource
+    private CapsuleCollider2D capsuleCollider;
+
     private GameObject shootPoint; //자식으로 등록된 shootPoint
     private SpriteRenderer shootSprite; //shootPoint의 SpriteRenderer 
+    private AudioSource shootAudio; //shootPoint의 AudioSource
 
     public float jumpSpeed = 7f;
     public float shootOffset = 0.5f;
     public float spriteOffset = 0.1f;
     public float bulletSpeed = 80f;
+    public int maxJump = 2;
 
     public GameObject bulletPrefab;
 
-    void Start()
+    private void Start()
     {
+        isDead = false; //안 죽은 상태로 시작
         isGrounded = true; //시작할 때 땅에 닿았다고 처리
         shootTimer = 0f; //타이머 초기화
         spriteTimer = 0f; //타이머 초기화
 
-        rigidbody = GetComponent<Rigidbody2D>();
+        rigid = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
-        audioSource = GetComponent<AudioSource>();
-        shootPoint = transform.GetChild(0).gameObject;
+        jumpAudio = GetComponent<AudioSource>();
+        capsuleCollider = GetComponent<CapsuleCollider2D>();
+
+        shootPoint = transform.GetChild(0).gameObject; //자식 shootPoint 가져오기
         shootSprite = shootPoint.GetComponent<SpriteRenderer>();
+        shootAudio = shootPoint.GetComponent<AudioSource>();
 
         shootSprite.enabled = false;
     }
 
-    void Update()
+    private void Update()
     {
+        if(isDead) return; //죽었다면 메소드 반환
+
         shootTimer += Time.deltaTime; //발사 타이머 초세기
         spriteTimer += Time.deltaTime; //스프라이트 타이머 초세기
 
-        if (rigidbody != null)
-        {
-            Jump();
-            Shoot();
-        }
+        Jump();
+        Shoot();
     }
 
     //점프 처리
     private void Jump()
     {
         //스페이스를 누르고 점프 중이 아니라면
-        if(Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        if(Input.GetKeyDown(KeyCode.Space) && jumpCount < maxJump)
         {
-            rigidbody.velocity = Vector3.zero; //점프 직전에 속도 초기화
+            jumpCount++;
+            jumpAudio.Play(); //점프 소리 재생
+            rigid.velocity = Vector3.zero; //점프 직전에 속도 초기화
 
             isGrounded = false;
 
-            rigidbody.velocity = new Vector2(0f, jumpSpeed);
+
+            rigid.velocity = new Vector2(0f, jumpSpeed);
         }
         //스페이스를 뗐을 때 아직 점프 중이었다면
-        else if (Input.GetKeyUp(KeyCode.Space) && rigidbody.velocity.y > 0f)
+        else if (Input.GetKeyUp(KeyCode.Space) && rigid.velocity.y > 0f)
         {
-            rigidbody.velocity = new Vector2(0f, rigidbody.velocity.y * 0.5f); //속도 절반으로 감소
+            rigid.velocity = new Vector2(0f, rigid.velocity.y * 0.5f); //속도 절반으로 감소
         }
 
         animator.SetBool("Grounded", isGrounded); //애니메이터 조작
@@ -80,8 +92,7 @@ public class PlayerController : MonoBehaviour
             spriteTimer = 0f;
 
             shootSprite.enabled = true; //발사 스프라이트 활성화
-
-            audioSource.Play(); //발사 소리 재생
+            shootAudio.Play(); //발사 소리 재생
 
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition); //마우스의 월드 포지션
             Vector2 direction = ((Vector2)mousePos - (Vector2)shootPoint.transform.position).normalized; //쏘는 방향의 정규화 벡터
@@ -103,7 +114,14 @@ public class PlayerController : MonoBehaviour
     {
         if (collision.contacts[0].normal.y > 0.7f) //충돌체의 방향이 위를 향하고 있다면
         {
+            jumpCount = 0;
             isGrounded = true;
         }
     }
+
+    public void Dead()
+    {
+        isDead = true;
+    }
+
 }
