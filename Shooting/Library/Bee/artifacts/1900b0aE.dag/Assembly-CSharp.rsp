@@ -373,6 +373,8 @@
 "Assets/Scripts/BackgroundMover.cs"
 "Assets/Scripts/Bullet.cs"
 "Assets/Scripts/HeadTrigger.cs"
+"Assets/Scripts/MonsterController.cs"
+"Assets/Scripts/MonsterSpawner.cs"
 "Assets/Scripts/PlatformMover.cs"
 "Assets/Scripts/PlatformSpawner.cs"
 "Assets/Scripts/PlayerController.cs"
