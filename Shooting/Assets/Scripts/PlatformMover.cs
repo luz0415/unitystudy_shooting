@@ -21,7 +21,7 @@ public class PlatformMover : MonoBehaviour
         if(transform.position.x < resetX)
         {
             if(platformNum != -1)
-                spawner.instance.AddList(platformNum);
+                spawner.AddList(platformNum);
 
             transform.position = resetPos;
             this.enabled = false;

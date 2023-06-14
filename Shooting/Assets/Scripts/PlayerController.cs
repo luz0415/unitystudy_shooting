@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -14,12 +15,14 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D rigid; 
     private Animator animator;
     private AudioSource jumpAudio; //Player의 AudioSource
-    private CapsuleCollider2D capsuleCollider;
+    private TextFade textFade;
 
     private GameObject shootPoint; //자식으로 등록된 shootPoint
     private SpriteRenderer shootSprite; //shootPoint의 SpriteRenderer 
     private AudioSource shootAudio; //shootPoint의 AudioSource
+    private TextMeshPro missText;
 
+    public float missFadeTime = 1.0f;
     public float jumpSpeed = 7f;
     public float shootOffset = 0.5f;
     public float spriteOffset = 0.1f;
@@ -38,11 +41,12 @@ public class PlayerController : MonoBehaviour
         rigid = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         jumpAudio = GetComponent<AudioSource>();
-        capsuleCollider = GetComponent<CapsuleCollider2D>();
+        textFade = GetComponent<TextFade>();
 
         shootPoint = transform.GetChild(0).gameObject; //자식 shootPoint 가져오기
         shootSprite = shootPoint.GetComponent<SpriteRenderer>();
         shootAudio = shootPoint.GetComponent<AudioSource>();
+        missText = transform.GetChild(1).gameObject.GetComponent<TextMeshPro>(); //자식 Miss Text의 TextMeshPro가져오기
 
         shootSprite.enabled = false;
     }
@@ -50,6 +54,8 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         if(isDead) return; //죽었다면 메소드 반환
+
+        if (transform.position.y < -5.5) Die();
 
         shootTimer += Time.deltaTime; //발사 타이머 초세기
         spriteTimer += Time.deltaTime; //스프라이트 타이머 초세기
@@ -101,6 +107,7 @@ public class PlayerController : MonoBehaviour
             Quaternion bulletRotation = Quaternion.AngleAxis(angle, Vector3.forward); //z축을 기준으로 회전을 돌림
 
             GameObject bullet = Instantiate(bulletPrefab, shootPoint.transform.position, bulletRotation); //마우스 방향으로 총알 생성
+            bullet.GetComponent<Bullet>().player = this;
             bullet.GetComponent<Rigidbody2D>().velocity = new Vector2(direction.x * bulletSpeed, direction.y * bulletSpeed); //총알에 속도 부여
         }
         //spriteTimer가 spriteOffset을 지났을 때
@@ -118,10 +125,25 @@ public class PlayerController : MonoBehaviour
             isGrounded = true;
         }
     }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if(collision.gameObject.tag == "Enemy")
+        {
+            Die();
+        }
+    }
 
-    public void Dead()
+    public void Miss()
+    {
+        StartCoroutine(textFade.FadeTextToZero(missText, missFadeTime));
+    }
+
+    public void Die()
     {
         isDead = true;
+        rigid.velocity = Vector3.zero;
+
+        GameManager.instance.OnPlayerDead();
     }
 
 }

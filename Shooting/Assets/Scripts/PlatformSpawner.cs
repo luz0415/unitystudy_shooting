@@ -9,8 +9,6 @@ public class PlatformSpawner : MonoBehaviour
     public float spawnPosMin = -1.5f; //«√∑ß∆˚ √÷¿˙ ≥Ù¿Ã
     public float spawnPosMax = 5.5f; //«√∑ß∆˚ √÷¥Î ≥Ù¿Ã
 
-    public PlatformSpawner instance; //ΩÃ±€≈Ê
-
     private float spawnTime;
     private float spawnPos;
     private float timer;
@@ -18,17 +16,6 @@ public class PlatformSpawner : MonoBehaviour
     private List<int> numList;
     private GameObject spawnPlatform;
 
-    private void Awake()
-    {
-        if(instance == null)
-        {
-            instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
     void Start()
     {
         numList = new List<int>() { 1, 2, 3, 4, 5 }; //∏ÆΩ∫∆Æ √ ±‚»≠
